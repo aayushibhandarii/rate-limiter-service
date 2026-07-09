@@ -22,18 +22,28 @@ if currentTokens>0 then
     currentTokens = currentTokens - 1
     lastRefillTimestamp = currentTimestamp
 
-    redis.call("HSET", KEYS[1], "tokens", currentTokens,"LastRefillTimestamp", lastRefillTimestamp)
+    redis.call(
+        "HSET", 
+        KEYS[1], 
+        "tokens", 
+        currentTokens,
+        "LastRefillTimestamp", 
+        lastRefillTimestamp
+    )
     allowed = 1
 end
 
 local resetTime = 0
 if refillRate > 0 then
     resetTime = lastRefillTimestamp + math.ceil((capacity-currentTokens)/refillRate)*1000
+
+    local ttl = math.ceil(capacity / refillRate) * 1000
+    redis.call("PEXPIRE", KEYS[1], ttl)
 end
 
 return {
     allowed,
     currentTokens,
     resetTime,
-    "Token Bucket"
+    "tokenBucket"
 }

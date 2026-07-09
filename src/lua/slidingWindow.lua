@@ -12,12 +12,26 @@ local allowed = 0
 if count < capacity then
     allowed = 1
     count = count + 1
-    redis.call("ZADD",KEYS[1], currentTimestamp,member)
+    redis.call(
+        "ZADD",
+        KEYS[1], 
+        currentTimestamp,
+        member
+    )
 end
 
-local oldest = redis.call("ZRANGE", KEYS[1], 0, 0, "WITHSCORES")
+redis.call("PEXPIRE", KEYS[1], windowSize)
+
+local oldestRequest = redis.call("ZRANGE", KEYS[1], 0, 0, "WITHSCORES")
 local resetTime = currentTimestamp
-if count >= capacity and oldest[2] then
-    resetTime = tonumber(oldest[2]) + windowSize
+
+if count >= capacity and oldestRequest[2] then
+    resetTime = tonumber(oldestRequest[2]) + windowSize
 end
-return {allowed, math.max(0,capacity - count), resetTime, "Sliding Window"}
+
+return {
+    allowed, 
+    math.max(0, capacity - count), 
+    resetTime, 
+    "slidingWindow"
+}
