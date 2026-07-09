@@ -1,22 +1,128 @@
-### Building and running your application
+# Running with Docker
 
-When you're ready, start your application by running:
-`docker compose up --build`.
+## Prerequisites
 
-Your application will be available at http://localhost:3000.
+- Docker
+- Docker Compose
 
-### Deploying your application to the cloud
+---
 
-First, build your image, e.g.: `docker build -t myapp .`.
-If your cloud uses a different CPU architecture than your development
-machine (e.g., you are on a Mac M1 and your cloud provider is amd64),
-you'll want to build the image for that platform, e.g.:
-`docker build --platform=linux/amd64 -t myapp .`.
+## Build
 
-Then, push it to your registry, e.g. `docker push myregistry.com/myapp`.
+```bash
+docker compose build
+```
 
-Consult Docker's [getting started](https://docs.docker.com/go/get-started-sharing/)
-docs for more detail on building and pushing.
+---
 
-### References
-* [Docker's Node.js guide](https://docs.docker.com/language/nodejs/)
+## Start
+
+```bash
+docker compose up
+```
+
+To start multiple application instances
+
+```bash
+docker compose up --build --scale server=2
+```
+
+---
+
+## Services
+
+### Server
+
+Runs the Express application.
+
+Port
+
+```
+3000
+```
+
+### Redis
+
+Runs Redis for storing rate limiting state.
+
+Port
+
+```
+6379
+```
+
+---
+
+## Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| REDIS_HOST | redis | Redis hostname |
+| NODE_ENV | production | Node environment |
+
+---
+
+## Verify
+
+Configure a client
+
+```http
+PUT /admin/clients/client1
+```
+
+Example Token Bucket
+
+```json
+{
+  "mode": "tokenBucket",
+  "capacity": 100,
+  "refillRate": 10
+}
+```
+
+Check
+
+```http
+POST /check
+```
+
+```json
+{
+  "clientKey": "client1"
+}
+```
+
+---
+
+## Load Testing
+
+Run
+
+```bash
+k6 run loadTest.js
+```
+
+or against the Docker deployment
+
+```bash
+k6 run loadTest.js
+```
+
+The service should return
+
+- 200 (allowed)
+- 429 (rate limited)
+
+---
+
+## Stop
+
+```bash
+docker compose down
+```
+
+Remove containers and volumes
+
+```bash
+docker compose down -v
+```
