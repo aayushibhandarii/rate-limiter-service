@@ -5,9 +5,17 @@ import { Response } from "express";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-export function getRedisKey(id: string) {
-    return `rate_limit_service:client:${id}`;
-}
+export const getConfigKey = (clientKey: string) =>
+    `config:${clientKey}`;
+
+export const getBucketKey = (clientKey: string) =>
+    `bucket:${clientKey}`;
+
+export const getWindowKey = (clientKey: string) =>
+    `window:${clientKey}`;
+
+export const getMetricsKey = (clientKey: string) =>
+    `metrics:${clientKey}`;
 
 export type ClientConfig =
     | {

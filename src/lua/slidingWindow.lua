@@ -29,6 +29,33 @@ if count >= capacity and oldestRequest[2] then
     resetTime = tonumber(oldestRequest[2]) + windowSize
 end
 
+if allowed == 1 then
+    redis.call(
+        "HINCRBY",
+        ARGV[4],
+        "allowedRequests",
+        1
+    )
+else
+    redis.call(
+        "HINCRBY",
+        ARGV[4],
+        "deniedRequests",
+        1
+    )
+end
+redis.call(
+    "HINCRBY",
+    ARGV[4],
+    "totalRequests",
+    1
+)
+redis.call(
+    "HSET",
+    ARGV[4],
+    "lastRequestAt",
+    currentTimestamp
+)
 return {
     allowed, 
     math.max(0, capacity - count), 

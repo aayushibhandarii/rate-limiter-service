@@ -20,27 +20,34 @@ local currentTokens = math.min(tokens + newTokens, capacity)
 local allowed = 0
 if currentTokens>0 then
     currentTokens = currentTokens - 1
-    lastRefillTimestamp = currentTimestamp
-
-    redis.call(
-        "HSET", 
-        KEYS[1], 
-        "tokens", 
-        currentTokens,
-        "LastRefillTimestamp", 
-        lastRefillTimestamp
-    )
     allowed = 1
 end
+if newTokens > 0 then
+    lastRefillTimestamp =
+        lastRefillTimestamp +
+        math.floor(elapsedTime / 1000) * 1000
+end
+
+redis.call(
+    "HSET", 
+    KEYS[1], 
+    "tokens", 
+    currentTokens,
+    "LastRefillTimestamp", 
+    lastRefillTimestamp
+)
 
 local resetTime = 0
 if refillRate > 0 then
     resetTime = lastRefillTimestamp + math.ceil((capacity-currentTokens)/refillRate)*1000
-
-    local ttl = math.ceil(capacity / refillRate) * 1000
-    redis.call("PEXPIRE", KEYS[1], ttl)
 end
 
+if allowed == 1 then
+    redis.call("HINCRBY",ARGV[4],"allowedRequests",1)
+else
+    redis.call("HINCRBY",ARGV[4],"deniedRequests",1)
+end
+redis.call("HINCRBY",ARGV[4],"totalRequests",1)
 return {
     allowed,
     currentTokens,
