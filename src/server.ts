@@ -1,8 +1,14 @@
 import express from "express";
 import { getBucketKey, getConfigKey, getMetricsKey, getWindowKey, setRateLimitHeaders } from "./helper.js";
 import redis from "./redis/client.js";
-
+import cors from "cors";
 const app = express();
+app.use(
+    cors({
+        origin: "http://localhost:3001",
+        credentials:true
+    })
+);
 app.use(express.json());
 
 app.put("/admin/clients/:key",async(req, res) => {
